@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dreamscape Travel Wishlist</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* === THEME VARIABLES === */
+        :root {
+            --bg-light: #faf9f6;
+            --bg-dark: #1f1f1f;
+            --text-light: #1f1f1f;
+            --text-dark: #faf9f6;
+            --card-light: #ffffff;
+            --card-dark: #2c2c2c;
+            --accent: #eac7c7;
+            --accent-hover: #d4aaaa;
+            --font-header: 'Playfair Display', serif;
+            --font-body: 'Poppins', sans-serif;
+        }
+
+        /* === LOADER SCREEN === */
+        .loader-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--bg-light);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 1s ease, visibility 1s ease;
+            font-family: var(--font-header);
+        }
+
+        body.dark-mode .loader-screen {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        .loader-title {
+            font-size: 3.5rem;
+            opacity: 0;
+            transform: scale(0.9);
+            animation: fadeInZoom 2s ease-in-out forwards;
+        }
+
+        @keyframes fadeInZoom {
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .loader-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* === RESET & BODY === */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark-mode {
+            background-color: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        /* === NAVBAR === */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: var(--card-light);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        body.dark-mode .navbar {
+            background-color: var(--card-dark);
+        }
+
+        .navbar h1 {
+            font-family: var(--font-header);
+            font-size: 1.8rem;
+        }
+
+        .profile-icon, .toggle-mode {
+            cursor: pointer;
+        }
+
+        /* === DASHBOARD TABS === */
+        .dashboard-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+
+        /* logout but */
+        .navbar button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            margin-left: 1rem;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .navbar button:hover {
+            background: var(--accent-hover);
+        }
+        /* logout */
+
+
+        .dashboard-tabs button {
+            background: var(--accent);
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1rem;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        .dashboard-tabs button:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+        }
+
+        /* === GRID OF CARDS === */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            padding: 1rem 2rem;
+        }
+
+        body.loaded .navbar,
+        body.loaded .dashboard-tabs,
+        body.loaded .grid-container,
+        body.loaded .floating-add {
+            opacity: 1;
+        }
+
+        /* === CARD STYLING === */
+        .card {
+            position: relative;
+            background-color: var(--card-light);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+
+        body.dark-mode .card {
+            background-color: var(--card-dark);
+        }
+
+        .card:hover {
+            transform: scale(1.03);
+        }
+
+        .card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .card-content {
+            padding: 0.8rem 1rem;
+        }
+
+        /* === OVERLAY ON CARD === */
+        .details-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(250, 249, 246, 0.95);
+            color: var(--text-light);
+            padding: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+            pointer-events: none;
+            overflow-y: auto;
+        }
+
+        body.dark-mode .details-overlay {
+            background-color: rgba(28, 28, 28, 0.95);
+            color: var(--text-dark);
+        }
+
+        .card:hover .details-overlay {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .details-overlay h4 {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .details-overlay p {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 0.4rem;
+        }
+
+        /* === FLOATING ADD BUTTON === */
+        .floating-add {
+            position: fixed;
+            bottom: 2rem; right: 2rem;
+            width: 60px; height: 60px;
+            background: var(--accent);
+            color: white;
+            font-size: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            z-index: 20;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .floating-add:hover {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        .toggle-mode {
+            margin-left: 1rem;
+        }
+
+        /* === MODAL POPUP === */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+        }
+
+        .modal-content {
+            background: var(--card-light);
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 450px;
+        }
+
+        body.dark-mode .modal-content {
+            background: var(--card-dark);
+        }
+
+        .modal-content input,
+        .modal-content textarea,
+        .modal-content select {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        .modal-content button {
+            padding: 0.6rem 1.2rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .modal-content button:hover {
+            background: var(--accent-hover);
+        }
+
+        .overlay-buttons {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .overlay-buttons button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            transform: translateY(-1px);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background: linear-gradient(135deg, #e55555 0%, #d63031 100%);
+            transform: translateY(-1px);
+        }
+
+        .review-btn {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
+        }
+
+        .review-btn:hover {
+            background: linear-gradient(135deg, #00b8e6 0%, #2980b9 100%);
+            transform: translateY(-1px);
+        }
+
+        /* === DREAMY PINTEREST-STYLE QUOTE BANNER === */
+        .dream-quote {
+            position: relative;
+            text-align: center;
+            margin: 2rem auto 3rem;
+            max-width: 500px;
+            padding: 2rem 1.5rem;
+            font-family: var(--font-header);
+            font-size: 1.4rem;
+            font-weight: 400;
+            line-height: 1.6;
+            font-style: italic;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.9) 0%,
+            rgba(250, 249, 246, 0.95) 50%,
+            rgba(255, 255, 255, 0.9) 100%);
+            border: 1px solid rgba(234, 199, 199, 0.3);
+            border-radius: 20px;
+            box-shadow:
+                    0 8px 32px rgba(0, 0, 0, 0.08),
+                    0 2px 16px rgba(234, 199, 199, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            transition: all 0.4s ease;
+            color: #5a5a5a;
+        }
+
+        .dream-quote::before {
+            content: '✧';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.2rem;
+            color: var(--accent);
+            background: var(--bg-light);
+            padding: 0 8px;
+        }
+
+        .dream-quote::after {
+            content: '✧';
+            position: absolute;
+            bottom: -8px;
+            right: 50%;
+            transform: translateX(50%);
+            font-size: 1.2rem;
+            color: var(--accent);
+            background: var(--bg-light);
+            padding: 0 8px;
+        }
+
+        .dream-quote:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                    0 12px 40px rgba(0, 0, 0, 0.12),
+                    0 4px 20px rgba(234, 199, 199, 0.25),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        body.dark-mode .dream-quote {
+            background: linear-gradient(135deg,
+            rgba(44, 44, 44, 0.9) 0%,
+            rgba(35, 35, 35, 0.95) 50%,
+            rgba(44, 44, 44, 0.9) 100%);
+            border: 1px solid rgba(212, 170, 170, 0.2);
+            color: #d0d0d0;
+            box-shadow:
+                    0 8px 32px rgba(0, 0, 0, 0.3),
+                    0 2px 16px rgba(212, 170, 170, 0.1),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .dream-quote::before,
+        body.dark-mode .dream-quote::after {
+            background: var(--bg-dark);
+            color: var(--accent-hover);
+        }
+
+        body.dark-mode .dream-quote:hover {
+            box-shadow:
+                    0 12px 40px rgba(0, 0, 0, 0.4),
+                    0 4px 20px rgba(212, 170, 170, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .about-dreamscape {
+            text-align: center;
+            font-family: var(--font-header);
+            font-size: 1rem;
+            padding: 1.5rem 1rem;
+            margin-top: 2rem;
+            color: #777;
+        }
+
+        body.dark-mode .about-dreamscape {
+            color: #aaa;
+        }
+
+    </style>
+</head>
+</head>
+<body>
+
+<!-- Loader screen -->
+<div id="loader" class="loader-screen">
+    <h1 class="loader-title">Dreamscape</h1>
+</div>
+
+<!-- Navbar-->
+<div class="navbar">
+    <h1>Dreamscape</h1>
+    <div>
+        <span class="toggle-mode">🌓</span>
+        <span class="profile-icon" onclick="location.href='/account'">👤</span>
+        <button onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<!-- Filter buttons -->
+<div class="dashboard-tabs">
+    <button onclick="filterCards('all')">All</button>
+    <button onclick="filterCards('wishlist')">Wishlist</button>
+    <button onclick="filterCards('travelled')">Travelled</button>
+    <button onclick="location.href='/reviewsearch'">Reviews</button>
+</div>
+
+<!-- Random travel quote -->
+<div class="dream-quote" id="dreamQuote">"Collect moments, not things."</div>
+
+<!-- Grid container holding all travel place cards -->
+<div class="grid-container" id="cardGrid"></div>
+
+<!-- Floating button -->
+<div class="floating-add" onclick="openModal()">+</div>
+
+<!-- Modal for adding and editing a place -->
+<div class="modal" id="addModal">
+    <div class="modal-content">
+        <h2 id="modalTitle">Add New Place</h2>
+        <input type="hidden" id="placeId" />
+        <input type="text" id="name" placeholder="Place Name" required />
+        <input type="text" id="country" placeholder="Country" />
+        <input type="text" id="city" placeholder="City" />
+        <select id="priority">
+            <option value="High">High Priority</option>
+            <option value="Medium" selected>Medium Priority</option>
+            <option value="Low">Low Priority</option>
+        </select>
+        <textarea id="note" placeholder="Personal Note"></textarea>
+        <label><input type="checkbox" id="visited" /> Mark as Visited</label>
+        <input type="file" id="image" accept="image/*" />
+        <button id="modalSubmitBtn" onclick="addPlace()">Add</button>
+        <button onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+
+<!-- Modal for adding a review -->
+<div class="modal" id="reviewModal">
+    <div class="modal-content">
+        <h2>Write a Review</h2>
+        <textarea id="reviewText" placeholder="Share your thoughts..." required></textarea>
+        <select id="reviewRating">
+            <option value="" selected disabled>Select a rating</option>
+            <option value="1">★☆☆☆☆</option>
+            <option value="2">★★☆☆☆</option>
+            <option value="3">★★★☆☆</option>
+            <option value="4">★★★★☆</option>
+            <option value="5">★★★★★</option>
+        </select>
+        <button onclick="submitReview()">Submit Review</button>
+        <button onclick="closeReviewModal()">Cancel</button>
+    </div>
+</div>
+
+
+<!-- about-text -->
+<div class="about-dreamscape">
+    <p>"A canvas for your wanderlust. Curate, dream & remember."</p>
+</div>
+
+<script>
+    // Global variable to store the place ID for review
+    let reviewPlaceId = null;
+
+    //Toggle dark/light mode - simple body class toggle
+    document.querySelector('.toggle-mode').addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+    });
+
+    //Filter cards by type
+    function filterCards(type) {
+        document.querySelectorAll('.card').forEach(card => {
+            card.style.display = (type === 'all' || card.dataset.type === type) ? 'block' : 'none';
+        });
+    }
+
+    //add a new place - reset fields and show
+    function openModal() {
+        document.getElementById('addModal').style.display = 'flex';
+        document.getElementById('modalTitle').textContent = 'Add New Place';
+        document.getElementById('modalSubmitBtn').textContent = 'Add';
+        document.getElementById('modalSubmitBtn').onclick = addPlace;
+        clearModalFields();
+    }
+
+    //Clear all modal input
+    function clearModalFields() {
+        document.getElementById('placeId').value = '';
+        document.getElementById('name').value = '';
+        document.getElementById('country').value = '';
+        document.getElementById('city').value = '';
+        document.getElementById('priority').value = 'Medium';
+        document.getElementById('note').value = '';
+        document.getElementById('visited').checked = false;
+        document.getElementById('image').value = '';
+    }
+
+    //Close modal when clicking outside form content
+    window.onclick = function(e) {
+        if (e.target === document.getElementById('addModal')) {
+            closeModal();
+        }
+        if (e.target === document.getElementById('reviewModal')) {
+            closeReviewModal();
+        }
+    };
+
+    //Close modal and clear fields
+    function closeModal() {
+        document.getElementById('addModal').style.display = 'none';
+        clearModalFields();
+    }
+
+    //Add new place - gather data, package in FormData & POST to backend
+    function addPlace() {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const name = document.getElementById('name').value;
+        const country = document.getElementById('country').value;
+        const city = document.getElementById('city').value;
+        const priority = document.getElementById('priority').value;
+        const note = document.getElementById('note').value;
+        const visited = document.getElementById('visited').checked;
+        const file = document.getElementById('image').files[0];
+
+        if (!name || !file) {
+            alert('Please enter name and select an image.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('country', country);
+        formData.append('city', city);
+        formData.append('priority', priority);
+        formData.append('note', note);
+        formData.append('visited', visited);
+        formData.append('imageFile', file);
+
+        fetch(`http://localhost:8080/api/places?userId=${user.id}`, {
+            method: 'POST',
+            body: formData
+        })
+            .then(res => res.ok ? res.text() : Promise.reject('Failed to save'))
+            .then(text => {
+                alert(text);
+                window.location.reload();
+            })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    // Edit place — fill modal with place data and switch it to edit mode
+    function editPlace(card) {
+        event.stopPropagation();
+
+        const id = card.dataset.id;
+        const name = card.querySelector('h3').innerText;
+        const locationText = card.querySelector('.card-content p').innerText.replace('Location: ', '');
+        const [city, country] = locationText.includes(',') ? locationText.split(',').map(s => s.trim()) : [locationText.trim(), ''];
+
+        const priorityElement = card.querySelector('.card-content p:nth-child(2)');
+        const priority = priorityElement ? priorityElement.innerText.replace('Priority: ', '') : 'Medium';
+
+        const noteElement = card.querySelector('.details-overlay p:nth-child(2)');
+        const note = noteElement ? noteElement.textContent.replace('Note:', '').trim() : '';
+
+        const ratingElement = card.querySelector('.details-overlay p:nth-child(3)');
+        const rating = ratingElement ? (ratingElement.textContent.split('★').length - 1) : 0;
+
+        const visited = card.dataset.type === 'travelled';
+
+        document.getElementById('placeId').value = id;
+        document.getElementById('name').value = name;
+        document.getElementById('country').value = country;
+        document.getElementById('city').value = city;
+        document.getElementById('priority').value = priority;
+        document.getElementById('note').value = note;
+        document.getElementById('visited').checked = visited;
+        document.getElementById('image').value = '';
+
+        document.getElementById('modalTitle').textContent = 'Edit Place';
+        document.getElementById('modalSubmitBtn').textContent = 'Save Changes';
+        document.getElementById('modalSubmitBtn').onclick = updatePlace;
+
+        document.getElementById('addModal').style.display = 'flex';
+    }
+
+    // Update existing place and PUT updated data to backend
+    function updatePlace() {
+        const btn = document.getElementById('modalSubmitBtn');
+        btn.disabled = true;
+
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const id = document.getElementById('placeId').value;
+        const name = document.getElementById('name').value;
+        const country = document.getElementById('country').value;
+        const city = document.getElementById('city').value;
+        const priority = document.getElementById('priority').value;
+        const note = document.getElementById('note').value;
+        const visited = document.getElementById('visited').checked;
+        const file = document.getElementById('image').files[0];
+
+        if (!name) {
+            alert('Place name is required');
+            btn.disabled = false;
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('name', name);
+        formData.append('country', country);
+        formData.append('city', city);
+        formData.append('priority', priority);
+        formData.append('note', note);
+        formData.append('visited', visited);
+        if (file) formData.append('imageFile', file);
+
+        fetch(`http://localhost:8080/api/places/${id}?userId=${user.id}`, {
+            method: 'PUT',
+            body: formData
+        })
+            .then(res => {
+                btn.disabled = false;
+                return res.ok ? res.text() : Promise.reject('Failed to update');
+            })
+            .then(text => {
+                alert(text);
+                window.location.reload();
+            })
+            .catch(err => {
+                alert('Error: ' + err);
+                btn.disabled = false;
+            });
+    }
+
+    //Logout & clear currentUser
+    function logout() {
+        localStorage.removeItem('currentUser');
+        alert('Logged out successfully');
+        location.href = '/register';
+    }
+
+    // Delete place — remove from DB and UI
+    function deletePlace(card) {
+        event.stopPropagation();
+
+        const id = card.dataset.id;
+        const name = card.querySelector('h3').innerText;
+
+        if (!confirm(`Delete "${name}"?`)) return;
+
+        fetch(`http://localhost:8080/api/places/${id}`, { method: 'DELETE' })
+            .then(res => res.ok ? card.remove() : Promise.reject('Failed to delete'))
+            .catch(err => alert('Error: ' + err));
+    }
+
+    // Open review modal
+    function openReviewModal(placeId) {
+        reviewPlaceId = placeId;
+        document.getElementById('reviewText').value = '';
+        document.getElementById('reviewRating').value = '';
+        document.getElementById('reviewModal').style.display = 'flex';
+    }
+
+    // Close review modal
+    function closeReviewModal() {
+        document.getElementById('reviewModal').style.display = 'none';
+        reviewPlaceId = null;
+    }
+
+    // Submit review to backend
+    function submitReview() {
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const text = document.getElementById('reviewText').value.trim();
+        const rating = document.getElementById('reviewRating').value;
+
+        if (!text || !rating) {
+            alert('Please write something and select a rating ');
+            return;
+        }
+
+        fetch(`http://localhost:8080/api/reviews?placeId=${reviewPlaceId}&userId=${user.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                reviewText: text,
+                ratedStars: parseInt(rating)
+            })
+        })
+
+                .then(res => res.ok ? res.json() : Promise.reject('Failed to save review'))
+            .then(() => {
+                alert('Review saved!');
+                closeReviewModal();
+            })
+            .catch(err => alert('Error: ' + err));
+    }
+
+    //on window load — fade loader, check user, random quote & load places
+    window.addEventListener('load', () => {
+        setTimeout(() => document.getElementById('loader').classList.add('fade-out'), 2500);
+
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (!user) {
+            alert('Please login first');
+            location.href = '/register';
+            return;
+        }
+
+        // Random travel quote
+        const quotes = [
+            "Collect moments, not things.",
+            "Wander where the WiFi is weak.",
+            "The world is yours to explore.",
+            "Adventure awaits beyond comfort.",
+            "Travel far, live deeply."
+        ];
+        document.getElementById('dreamQuote').textContent = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
+
+        // Load user places from backend
+        fetch(`http://localhost:8080/api/places?userId=${user.id}`)
+            .then(res => res.json())
+            .then(places => {
+                const grid = document.getElementById('cardGrid');
+                places.forEach(place => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.dataset.id = place.id;
+                    card.dataset.type = place.visited ? 'travelled' : 'wishlist';
+                    card.innerHTML = `
+                        <img src="data:image/jpeg;base64,${place.image}" alt="${place.name}" />
+                        <div class="card-content">
+                            <h3>${place.name}</h3>
+                            <p><strong>Location:</strong> ${place.city}, ${place.country}</p>
+                            <p><strong>Priority:</strong> ${place.priority}</p>
+                        </div>
+                        <div class="details-overlay">
+                            <h4>Notes & Details</h4>
+                            <p><strong>Note:</strong> ${place.note || 'No notes.'}</p>
+                            <p><strong>Rating:</strong> ${'★'.repeat(place.rating || 0)}${'☆'.repeat(5 - (place.rating || 0))}</p>
+                           <div class="overlay-buttons">
+                                <button class="edit-btn">Edit</button>
+                                <button class="delete-btn">Delete</button>
+                                ${place.visited ? '<button class="review-btn">Review</button>' : ''}
+                           </div>
+                        </div>
+                    `;
+
+                    // Event handlers for edit & delete button
+                    card.querySelector('.edit-btn').addEventListener('click', e => {
+                        e.stopPropagation();
+                        editPlace(card);
+                    });
+                    card.querySelector('.delete-btn').addEventListener('click', e => {
+                        e.stopPropagation();
+                        deletePlace(card);
+                    });
+
+                    // Add event handler for review button if it exists
+                    const reviewBtn = card.querySelector('.review-btn');
+                    if (reviewBtn) {
+                        reviewBtn.addEventListener('click', e => {
+                            e.stopPropagation();
+                            openReviewModal(place.id);
+                        });
+                    }
+
+                    grid.appendChild(card);
+                });
+            })
+            .catch(err => console.error('Error loading places:', err));
+    });
+</script>
+</body>
+</html>

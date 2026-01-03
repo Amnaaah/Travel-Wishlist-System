@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dreamscape Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #faf9f6;
+      --card: #ffffff;
+      --text: #1f1f1f;
+      --accent: #eac7c7;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .auth-container {
+      background: var(--card);
+      padding: 3rem 2rem;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .auth-container h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .auth-container form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .auth-container input {
+      padding: 0.7rem;
+      margin-bottom: 1rem;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+    }
+
+    .auth-container button {
+      padding: 0.8rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .auth-container button:hover {
+      background: #d4aaaa;
+    }
+
+    .switch {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .switch a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+<div class="auth-container" id="loginContainer">
+  <h1>Welcome Back </h1>
+  <form onsubmit="handleLogin(event)">
+    <input type="text" id="loginUser" placeholder="Username" required>
+    <input type="password" id="loginPass" placeholder="Password" required>
+    <button type="submit">Login</button>
+  </form>
+  <div class="switch">Don't have an account? <a href="#" onclick="toggleForm()">Register</a></div>
+</div>
+
+<!-- Register form -->
+<div class="auth-container" id="registerContainer" style="display:none">
+  <h1>Create Your Account </h1>
+  <form onsubmit="handleRegister(event)">
+    <input type="text" id="regUser" placeholder="Username" required>
+    <input type="email" id="regEmail" placeholder="Email" required>
+    <input type="password" id="regPass" placeholder="Password" required>
+    <button type="submit">Register</button>
+  </form>
+  <div class="switch">Already have an account? <a href="#" onclick="toggleForm()">Login</a></div>
+</div>
+
+<script>
+
+  // login form submission
+  async function handleLogin(event) {
+    event.preventDefault(); // Prevent page reload on form submit
+
+    // Grab username and password values, trim whitespace
+    const username = document.getElementById('loginUser').value.trim();
+    const password = document.getElementById('loginPass').value.trim();
+
+    // validating if both fields are filled
+    if (!username || !password) {
+      alert('Please enter username and password');
+      return; // Stop if validation fails
+    }
+
+    try {
+      // Send POST request to login API with JSON body
+      const res = await fetch('http://localhost:8080/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      // If wrong creds, throw error
+      if (!res.ok) throw new Error('Invalid username or password');
+
+      // returned user JSON data
+      const user = await res.json();
+
+      // Save user data in localStorage to keep user logged in
+      localStorage.setItem('currentUser', JSON.stringify(user));
+
+      alert('Login successful! Welcome back');
+      window.location.href = '/';
+
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  // Handle register form submission
+  async function handleRegister(event) {
+    event.preventDefault();
+
+    // Grab registration input values, trim whitespace
+    const username = document.getElementById('regUser').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPass').value.trim();
+
+    // Validate all fields
+    if (!username || !email || !password) {
+      alert('Please fill all the fields');
+      return; // Stop if incomplete
+    }
+
+    try {
+      // Send POST request to register API with user data JSON
+      const res = await fetch('http://localhost:8080/api/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+
+      // If response not OK, parse error message or fallback
+      if (!res.ok) {
+        const errMsg = await res.text();
+        throw new Error(errMsg || 'Registration failed');
+      }
+
+      alert('Registration successful! You can now login.');
+
+      // Switch back to login to enter new creds
+      toggleForm();
+
+    } catch (err) {
+      // Show registration error alert
+      alert(err.message);
+    }
+  }
+
+  // Toggle visibility between login and register
+  function toggleForm() {
+    const login = document.getElementById('loginContainer');
+    const register = document.getElementById('registerContainer');
+
+    // If login is hidden, show login and hide register; else reverse
+    if (login.style.display === 'none') {
+      login.style.display = 'block';
+      register.style.display = 'none';
+    } else {
+      login.style.display = 'none';
+      register.style.display = 'block';
+    }
+  }
+</script>
+
+</body>
+</html>

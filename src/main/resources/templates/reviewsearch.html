@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelReview - Find Reviews for Your Destination</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-light: #faf9f6;
+            --bg-dark: #1f1f1f;
+            --text-light: #1f1f1f;
+            --text-dark: #faf9f6;
+            --card-light: #ffffff;
+            --card-dark: #2c2c2c;
+            --accent: #eac7c7;
+            --accent-hover: #d4aaaa;
+            --font-header: 'Playfair Display', serif;
+            --font-body: 'Poppins', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-light);
+            color: var(--text-light);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .header {
+            text-align: center;
+            margin: 3rem 0;
+        }
+
+        .header h1 {
+            font-family: var(--font-header);
+            font-size: 3rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #777;
+        }
+
+        .search-container {
+            background: var(--card-light);
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+            border: 1px solid rgba(234,199,199,0.3);
+        }
+
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 0.8rem 1.2rem;
+            border: 1px solid rgba(234,199,199,0.4);
+            border-radius: 25px;
+            font-size: 1rem;
+            background: #fff;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .search-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.6rem;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .search-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .loading, .error-message, .no-results {
+            text-align: center;
+            margin: 2rem 0;
+            font-size: 1.1rem;
+            color: var(--accent);
+        }
+
+        .places-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .place-card {
+            background: var(--card-light);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+            cursor: pointer;
+            border: 1px solid rgba(234,199,199,0.2);
+        }
+
+        .place-card:hover {
+            transform: scale(1.03);
+        }
+
+        .place-image img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .place-info {
+            padding: 1rem;
+        }
+
+        .place-name {
+            font-family: var(--font-header);
+            font-size: 1.4rem;
+            color: var(--accent);
+            margin-bottom: 0.3rem;
+        }
+
+        .place-location {
+            color: #777;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .view-reviews-btn {
+            width: 100%;
+            padding: 0.6rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .view-reviews-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .reviews-section {
+            background: var(--card-light);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+            margin-top: 2rem;
+            border: 1px solid rgba(234,199,199,0.2);
+        }
+
+        .reviews-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(234,199,199,0.3);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+        }
+
+        .reviews-title {
+            font-family: var(--font-header);
+            font-size: 1.8rem;
+            color: var(--accent);
+        }
+
+        .reviews-count {
+            background: var(--accent);
+            color: white;
+            border-radius: 20px;
+            padding: 0.4rem 0.8rem;
+            font-weight: 500;
+        }
+
+        .review-card {
+            background: rgba(234,199,199,0.05);
+            border-left: 3px solid var(--accent);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .reviewer-name {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .review-text {
+            font-size: 0.95rem;
+            color: #555;
+            margin-top: 0.5rem;
+        }
+
+        .review-rating {
+            font-size: 0.9rem;
+            color: #777;
+        }
+
+        .stars {
+            color: #f59e0b;
+        }
+
+        .debug-info {
+            background: #f0f0f0;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2rem; }
+            .search-form { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>TravelReview</h1>
+        <p>Discover amazing destinations and read authentic reviews from fellow travelers</p>
+    </div>
+
+    <div class="search-container">
+        <form class="search-form" id="searchForm">
+            <input
+                    type="text"
+                    class="search-input"
+                    id="searchQuery"
+                    placeholder="Search for destinations (e.g., Dubai, Paris...)"
+                    required
+            />
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+    </div>
+
+    <div id="loading" class="loading" style="display:none;">Loading reviews...</div>
+    <div id="errorMessage" class="error-message" style="display:none;"></div>
+    <div id="noResults" class="no-results" style="display:none;">
+        <h2>No reviews found</h2>
+        <p>Try another place name or check your spelling.</p>
+    </div>
+
+    <div id="reviewsSection" class="reviews-section" style="display:none;"></div>
+</div>
+
+<script>
+    // 🌸 Config
+    const API_BASE_URL = 'http://localhost:8080/api/reviews';
+
+    // 🌿 Elements
+    const searchForm = document.getElementById('searchForm');
+    const searchQueryInput = document.getElementById('searchQuery');
+    const loadingEl = document.getElementById('loading');
+    const errorEl = document.getElementById('errorMessage');
+    const noResultsEl = document.getElementById('noResults');
+    const reviewsSection = document.getElementById('reviewsSection');
+
+    // 🌱 On form submit
+    searchForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const query = searchQueryInput.value.trim();
+
+        if (!query) {
+            showError('Please enter a search term.');
+            return;
+        }
+
+        showLoading(true);
+        clearMessages();
+
+        try {
+            // Fetch reviews directly
+            const res = await fetch(`${API_BASE_URL}/search?name=${encodeURIComponent(query)}`);
+            if (!res.ok) throw new Error('Failed to fetch reviews.');
+
+            const reviews = await res.json();
+            showLoading(false);
+
+            if (!reviews.length) {
+                showNoResults();
+            } else {
+                displayReviews(reviews, query);
+            }
+        } catch (err) {
+            showLoading(false);
+            showError('Error fetching reviews: ' + err.message);
+            console.error(err);
+        }
+    });
+
+    // 🌼 Render reviews
+    function displayReviews(reviews, placeName) {
+        reviewsSection.style.display = 'block';
+
+        const cards = reviews.map(r => `
+        <div class="review-card">
+            <div class="review-header">
+                <span class="reviewer-name">Review by ${r.user?.name || 'Anonymous'}</span>
+                <div class="review-rating">
+                    <span class="stars">${'★'.repeat(r.ratedStars || 0)}${'☆'.repeat(5 - (r.ratedStars || 0))}</span>
+                    <span class="rating-number">${r.ratedStars || 0}/5</span>
+                </div>
+            </div>
+            <p class="review-text">${r.reviewText || 'No review text.'}</p>
+        </div>
+    `).join('');
+
+        reviewsSection.innerHTML = `
+        <div class="reviews-header">
+            <h2>Reviews for "${placeName}"</h2>
+            <span class="reviews-count">${reviews.length} review${reviews.length !== 1 ? 's' : ''}</span>
+        </div>
+        ${cards}
+    `;
+    }
+
+    // 🌸 Helpers
+    function showLoading(show) { loadingEl.style.display = show ? 'block' : 'none'; }
+    function showError(msg) { errorEl.textContent = msg; errorEl.style.display = 'block'; }
+    function showNoResults() { noResultsEl.style.display = 'block'; }
+    function clearMessages() {
+        errorEl.style.display = 'none';
+        noResultsEl.style.display = 'none';
+        reviewsSection.style.display = 'none';
+    }
+</script>
+</body>
+
+</html>
